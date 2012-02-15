@@ -1,0 +1,7 @@
+projects:
+
+  fest:
+    main:   source/app.coffee
+    source: source
+    dependences:
+      - [fierry, ../framework]
