@@ -16,9 +16,6 @@ return class Type
     # Root group of the groups hierarchy tree.
     @_root = new Group('', undefined, @name)
 
-    # Last referenced group. Default parent when adding test cases.
-    @_last_group = @_root
-
     # Last referenced absolute group. Default parent when adding
     # consecutive relative groups.
     @_node_group = @_root
@@ -54,8 +51,7 @@ return class Type
     parent = @get(full_name, true)
     group  = parent.register_group(full_name, raw)
     
-    # Set group as the last group & as node group if it's absolute.
-    @_last_group = group
+    # Set group as the node group if it's absolute.
     @_node_group = group if absolute
 
 
