@@ -1,6 +1,5 @@
 #
 # @require:
-#   Test:  fest/test
 #   Group: fest/group
 #
 
@@ -15,7 +14,7 @@ return class Type
   constructor: (@name, @runner) ->
 
     # Root group of the groups hierarchy tree.
-    @_root = new Group('')
+    @_root = new Group('', undefined, @name)
 
     # Last referenced group. Default parent when adding test cases.
     @_last_group = @_root
@@ -27,6 +26,17 @@ return class Type
     # Export root selection tree into the global namespace.
     F.set_global(@name, @_root.get_selection_tree())
     
+
+  #
+  # Registers a scenario group under the given name.
+  #
+  # @param name  {String}  group name.
+  # @param raw   {Object}  group definition.
+  #
+  scenario: (name, raw = {}) ->
+    raw.scenario = true
+    @group(name, raw)
+
 
   #
   # Registers a group under the given name.
@@ -42,27 +52,8 @@ return class Type
 
     # Retrieve the group parent & create the group inside.
     parent = @get(full_name, true)
-    group  = parent.add(Group, full_name, @name, raw)
+    group  = parent.register_group(full_name, raw)
     
-    # Set group as the last group & as node group if it's absolute.
-    @_last_group = group
-    @_node_group = group if absolute
-
-
-  #
-  # References a group with the given name.
-  #
-  # @param name  {String}  group name.
-  #
-  use: (name) ->
-
-    # From the group name: if it's absolute & its full name.
-    absolute  = @_is_group_absolute(name)
-    full_name = @_resolve_group_name(name, absolute)
-
-    # Retrieves the group matching the given full_name.
-    group = @get(full_name, false)
-
     # Set group as the last group & as node group if it's absolute.
     @_last_group = group
     @_node_group = group if absolute
@@ -96,26 +87,6 @@ return class Type
 
     # Return group name as a child of the current node group.
     return @_node_group.get_child_prefix() + name
-
-
-  #
-  # Registers a test under the latest referenced group.
-  #
-  # @param name  {String}  test name.
-  # @param raw   {Object}  test definition.
-  #
-  test: (name, raw) ->
-    @_last_group.add(Test, @_resolve_test_name(name), @name, raw)
-
-
-  #
-  # Returns full name from the given test name. The test is always a
-  # child of the last referenced group.
-  #
-  # @param name  {String}  test name.
-  #
-  _resolve_test_name: (name) ->
-    return @_last_group.get_child_prefix() + name
 
 
   #

@@ -6,6 +6,15 @@
 
 
 
+# Reserved group properties. Properties defined below will be used to
+# define group parameters, whereas all other group properties will be
+# used to create tests.
+RESERVED = [
+  'after', 'after_each' , 'before', 'before_each' ,
+  'envs', 'generators', 'min_arg', 'run', 'scenario'
+]
+
+
 return class Group extends Node
 
   constructor: (name, parent, type, raw = {}) ->
@@ -14,32 +23,97 @@ return class Group extends Node
     # Collection of group nodes.
     @nodes = []
 
+    # Assert the simple name is selectable.
+    if not @_is_selectable(@_simple)
+      throw new Error "Simple name '#{@_simple}' is not selectable."
+
+    # Update the selection tree.
+    parent.get_selection_tree()[@_simple] = @get_selection_tree()
+
+    # Create tests from all other not RESERVED properties.
+    @_create_tests(raw)
+
+
+  #
+  # Returns true if the given name matches variable regexp and 
+  # therefore is selectable.
+  #
+  # @param name  {String}
+  # @return      {Boolean}
+  #
+  _is_selectable: (name) ->
+    return regexp().VARIABLE.test(name)
+
+
+  #
+  # Creates group tests from all not RESERVED properties.
+  # If raw.generators is defined, generates additional tests using
+  # factories for each provided argument.
+  #
+  # @param raw  {Object}
+  #
+  _create_tests: (raw) ->
+
+    # Register inline tests provided in raw hash.
+    for name, test in raw when RESERVED.indexOf(k) is -1
+      @register_test(name, test)
+
+    # Register tests from factories generated using provided arguments.
+    for generator in raw.generators
+      for argument in generator.args
+
+        # Factory must always return a hash of tests.
+        for name, test of generator.factory(argument)
+          @register_test(name, test)
+
 
   #
   # Creates and adds a new group child node. Attaches child node
   # selection tree into the group selection tree. Throws an error 
   # if the name is duplicated with any of the existing group nodes.
   #
-  # @param type   {Class}   node class type.
-  # @param name   {String}  node name.
-  # @param ttype  {String}  tests type name.
-  # @param raw    {Object}  node definition.
+  # @param name   {String}  group name.
+  # @param raw    {Object}  group definition.
   #
-  # @return       {Node}
+  # @return       {Group}
   #
-  add: (type, name, ttype, raw) ->
-
+  register_group: (name, raw) ->
+    
     # Assert the name is unique.
     for n in @nodes when n.name is name
       throw new Error "Node #{name} already exists"
     
     # Create new node and push it as a group child.
-    @nodes.push(n = new type(name, @, ttype, raw))
+    @nodes.push(group = new Group(name, @, @_type, raw))
+    return group
 
-    # Update the selection tree.
-    @get_selection_tree()[n.get_simple_name()] = n.get_selection_tree()
 
-    return n
+  #
+  # Creates and adds a new test child node. Accepts raw as function as
+  # a shortcut definition. Throws an error if the name is duplicated
+  # with any of the existing group nodes.
+  #
+  # @param name   {String}  test name.
+  # @param raw    {Object}  test definition.
+  #
+  # @return       {Test}
+  #
+  register_test: (name, raw) ->
+
+    # Expands the test name.
+    name = @get_child_prefix + name
+
+    # Expands the shortcut test definition.
+    if typeof raw is 'function'
+      raw = run: raw
+
+    # Assert the name is unique.
+    for n in @nodes when n.name is name
+      throw new Error "Node #{name} already exists"
+
+    # Create new node and push it as a group child.
+    @nodes.push(test = new Test(name, @, @_type, raw))
+    return test
 
 
   #
@@ -47,7 +121,6 @@ return class Group extends Node
   # is found.
   #
   # @param name  {String}  simple node name.
-  #
   # @return      {Node}
   #
   get: (name) ->
@@ -84,3 +157,19 @@ return class Group extends Node
   #
   get_child_prefix: ->
     return if @name is '' then @name else @name + '.'
+
+
+  #
+  # Returns root of the node selection tree. If the node is a group,
+  # it will use its root to attach child nodes selection trees by
+  # their simple names.
+  #
+  # @return  {->}  node selection tree root.
+  #
+  get_selection_tree: ->
+
+    # Assign fully qualified node name.    
+    name = if @name then @_type + '.' + @name else @_type
+
+    # Assign the selection function.
+    return @_selection ?= -> context().select(name)

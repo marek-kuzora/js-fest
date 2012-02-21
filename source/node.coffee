@@ -11,25 +11,16 @@ return class Node
   #
   # @param name    {String}  node full name.
   # @param parent  {Node}    node parent.
+  # @param type    {String}  node type name.
   # @param raw     {Object}  node definition.
   #
   constructor: (@name, @parent, @_type, raw) ->
 
-    # Node simple name.
+    # Node simple name. 
     @_simple = @name.substr(@parent.get_child_prefix().length)
-
-    # Assert the simple name is selectable.
-    if not @_is_selectable(@_simple)
-      throw new Error "Simple name '#{@_simple}' is not selectable"
-
-    # Node display name.
-    @_display = raw.display || @name
 
     # Collection of preloaded modules.
     @_envs = raw.envs || []
-
-    # Collection of node dependences (in qa).
-    @_dpds = raw.dependences || []
 
     # Minimal number of times to run (in pfc).
     @_min_arg = raw.min_arg || 0
@@ -45,46 +36,6 @@ return class Node
 
     # After method for each invocation of the same test (in pfc).
     @_after_each = raw.after_each || (->)
-
-
-  #
-  # Returns true if the given name matches variable regexp 
-  # and therefore is selectable.
-  #
-  # @param name  {String}
-  # @return      {Boolean}
-  #
-  _is_selectable: (name) ->
-    return regexp().VARIABLE.test(name)
-
-
-  #
-  # Returns the node simple name. Simple name is assured to be
-  # selectable, that means the client will be able to treat it as 
-  # a normal property when selecting the tests via selection tree.
-  #
-  # @return  {String}
-  #
-  get_simple_name: ->
-    return @_simple
-
-
-  #
-  # Returns root of the node selection tree. If the node is a group,
-  # it will use its root to attach child nodes selection trees by
-  # their simple names.
-  #
-  # @return  {->}  node selection tree root.
-  #
-  get_selection_tree: ->
-
-    # Assign fully qualified node name.    
-    name = if @name then @_type + '.' + @name else @_type
-
-    # Assign the selection function.
-    return @_selection ?= ->
-      context().select(name)
-
 
 
   # draft
