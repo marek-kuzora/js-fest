@@ -10,16 +10,19 @@ return class Test extends Node
   constructor: (name, parent, type, raw = {}) ->
     super
 
+    # Indicates an asynchronous test.
+    @async = raw.async || false
+
     # Run method for the test.
-    @_run = raw.run
+    @run = raw.run
 
     # Assert the run method is defined.
-    if not F.is_function(@_run)
+    if not F.is_function(@run)
       throw new Error "Run method not found: #{@name}"
 
     # Assert the simple name does not contain dot character.
-    if @_simple.indexOf('.') isnt -1
-      throw new Error "Simple name '#{@_simple}' contains dot character."
+    if @simple.indexOf('.') isnt -1
+      throw new Error "Simple name '#{@simple}' contains dot character."
 
 
   #

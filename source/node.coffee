@@ -1,9 +1,3 @@
-#
-# @require:
-#   string: fierry/util/string
-#   regexp: fierry/util/regexp
-#
-
 
 
 return class Node
@@ -16,14 +10,15 @@ return class Node
   #
   constructor: (@name, @parent, @_type, raw) ->
 
-    # Node simple name. 
-    @_simple = @name.substr(@parent.get_child_prefix().length)
+    # Node simple name.
+    # TODO handle no parent!
+    @simple = @name.substr(@parent?.get_child_prefix().length || 0)
+
+    # Minimal number of times to run (in pfc).
+    @min_arg = raw.min_arg || 0
 
     # Collection of preloaded modules.
     @_envs = raw.envs || []
-
-    # Minimal number of times to run (in pfc).
-    @_min_arg = raw.min_arg || 0
 
     # Before method for the test.
     @_before = raw.before || (->)
@@ -52,21 +47,21 @@ return class Node
   #
   # Invokes before test setup. Starts with XXX
   #
-  run_before: (scope) ->
-    @parent.run_before(scope) if @parent
+  run_before: (scope, deep) ->
+    @parent.run_before(scope, true) if @parent and deep
     @_before.call(scope)
 
 
-  run_before_each: (scope) ->
-    @parent.run_before_each(scope) if @parent
+  run_before_each: (scope, deep) ->
+    @parent.run_before_each(scope, true) if @parent and deep
     @_before_each.call(scope)
 
 
-  run_after: (scope) ->
+  run_after: (scope, deep) ->
     @_after.call(scope)
-    @parent.run_after(scope) if @parent
+    @parent.run_after(scope) if @parent and deep
 
 
-  run_after_each: (scope) ->
+  run_after_each: (scope, deep) ->
     @_after_each.call(scope)
-    @parent.run_after_each(scope) if @parent
+    @parent.run_after_each(scope) if @parent and deep

@@ -1,5 +1,8 @@
 #
 # @require:
+#   context: fest/context
+#   regexp:  fierry/util/regexp
+#
 #   Node: fest/node
 #   Test: fest/test
 #
@@ -20,15 +23,18 @@ return class Group extends Node
   constructor: (name, parent, type, raw = {}) ->
     super
 
+    # Indicates a scenario group.
+    @scenario = raw.scenario || false
+
     # Collection of group nodes.
     @nodes = []
 
     # Assert the simple name is selectable.
-    if not @_is_selectable(@_simple)
-      throw new Error "Simple name '#{@_simple}' is not selectable."
+    if @parent and not @_is_selectable(@simple)
+      throw new Error "Simple name '#{@simple}' is not selectable."
 
     # Update the selection tree.
-    parent.get_selection_tree()[@_simple] = @get_selection_tree()
+    parent.get_selection_tree()[@simple] = @get_selection_tree() if parent
 
     # Create tests from all other not RESERVED properties.
     @_create_tests(raw)
@@ -55,11 +61,11 @@ return class Group extends Node
   _create_tests: (raw) ->
 
     # Register inline tests provided in raw hash.
-    for name, test in raw when RESERVED.indexOf(k) is -1
+    for name, test of raw when RESERVED.indexOf(name) is -1
       @register_test(name, test)
 
     # Register tests from factories generated using provided arguments.
-    for generator in raw.generators
+    for generator in raw.generators || []
       for argument in generator.args
 
         # Factory must always return a hash of tests.
@@ -77,8 +83,11 @@ return class Group extends Node
   #
   # @return       {Group}
   #
-  register_group: (name, raw) ->
+  register_group: (name, raw = {}) ->
     
+    # Validates group raw hash.
+    @_type.group_validator(name, raw)
+
     # Assert the name is unique.
     for n in @nodes when n.name is name
       throw new Error "Node #{name} already exists"
@@ -98,14 +107,17 @@ return class Group extends Node
   #
   # @return       {Test}
   #
-  register_test: (name, raw) ->
+  register_test: (name, raw = {}) ->
 
     # Expands the test name.
-    name = @get_child_prefix + name
+    name = @get_child_prefix() + name
 
     # Expands the shortcut test definition.
     if typeof raw is 'function'
       raw = run: raw
+
+    # Validates test raw hash.
+    @_type.test_validator(name, raw)
 
     # Assert the name is unique.
     for n in @nodes when n.name is name
@@ -169,7 +181,7 @@ return class Group extends Node
   get_selection_tree: ->
 
     # Assign fully qualified node name.    
-    name = if @name then @_type + '.' + @name else @_type
+    name = if @name then @_type.name + '.' + @name else @_type.name
 
     # Assign the selection function.
     return @_selection ?= -> context().select(name)
