@@ -26,11 +26,11 @@ class Types
   # @param runner  {Object}  runner for running the tests.
   # @return        {Type}
   #
-  create: (name, runner) ->
+  create: (name, raw) ->
     if @_types[name]
       throw new Error "Type '#{name}' already defined."
 
-    return @_types[name] = new Type(name, runner)
+    return @_types[name] = new Type(name, raw)
 
 
   #
@@ -45,3 +45,8 @@ class Types
       throw new Error "Type '#{name}' not found."
 
     return @_types[name]
+
+
+
+# Return Types singleton as module API.  
+return new Types()

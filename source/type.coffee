@@ -11,10 +11,21 @@ return class Type
   # @param name    {String}  type name.
   # @param runner  {Object}  type runner.
   #
-  constructor: (@name, @runner) ->
+  constructor: (@name, raw) ->
+
+    # Runner responsible for running tests registered to this type.
+    @runner = raw.runner
+
+    # Tests validator. Asserts the tests definitions are appropriate
+    # for the given test type. Will throw an error if they arent.
+    @test_validator = raw.test_validator || (->)
+
+    # Groups validator. Asserts the groups definitions are appropriate
+    # for the given test type. Will throw an error if they arent.
+    @group_validator = raw.group_validator || (->)
 
     # Root group of the groups hierarchy tree.
-    @_root = new Group('', undefined, @name)
+    @_root = new Group('', undefined, @, {})
 
     # Last referenced absolute group. Default parent when adding
     # consecutive relative groups.
