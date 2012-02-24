@@ -1,5 +1,6 @@
 #
 # @require:
+#   array:   fierry/util/array
 #   storage: fierry/util/storage
 #
 
@@ -108,4 +109,5 @@ class Context
 
 
 
+# Return Context singleton as module API.
 return new Context()

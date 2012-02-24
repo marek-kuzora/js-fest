@@ -2,6 +2,7 @@
 # @require:
 #   types:      fest/types
 #   context:    fest/context
+#   string:     fierry/util/string
 #   storage:    fierry/util/storage
 #
 
@@ -84,7 +85,7 @@ class RunnerManager
     tests = []
 
     # Get tests instances whose qualifiers matches the type.
-    while @_tests[0].indexOf(tname) is 0
+    while @_tests[0]?.indexOf(tname) is 0
 
       # Get full node name without the type prefix.
       name = @_tests.shift().substr(tname.length + 1)
