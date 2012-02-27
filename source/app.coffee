@@ -65,7 +65,6 @@ class RunnerManager
   #
   constructor: (@_tests = []) ->
 
-
   #
   # Runs all continous tests found in the @_selected collection that
   # belongs to the same test type and therefore have the same runner.
@@ -73,7 +72,7 @@ class RunnerManager
   # done with the given tests.
   #
   run_next: ->
-    
+
     # Return if no tests are found.
     return if @_tests.length is 0
 

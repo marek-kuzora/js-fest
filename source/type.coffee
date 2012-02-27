@@ -106,6 +106,14 @@ return class Type
   #
   get: (full_name, parent) ->
 
+    # Assert client isnt looking for the root's parent.
+    if full_name is '' and parent
+      throw new Error "Cannot return parent of the root node."
+
+
+    # Return root node if full_name is empty.
+    return @_root if full_name is '' and not parent
+
     # Assign node to root as top node.
     node = @_root
 
