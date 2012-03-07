@@ -16,32 +16,32 @@ return types().create 'lightspeed',
   #
   # Additional node initialization code.
   #
-  # @param name   {String}  node name.
-  # @param group  {Object}  node definition.
+  # @param name  {String}  node name.
+  # @param node  {Object}  node definition.
   #
   node: (name, node) ->
 
     # Before method for the node.
-    @before = test.before || (->)
+    @before = node.before || (->)
 
     # After method for the test.
-    @after = test.after || (->)
+    @after = node.after || (->)
 
     # Collection of preloaded modules.
-    @envs = test.envs || []
+    @envs = node.envs || []
 
     # Constant method for the node. It's purpose is to wrap all 
     # time-consuming run operations that cannot be moved from 
     # the while loop. TestRunner will substract run-time of this
     # method from the main run method run-time.
-    @const = test.const || (->)
+    @constant = node.constant
 
 
   #
   # Additional test initialization code. 
   #
-  # @param name   {String}  test name.
-  # @param group  {Object}  test definition.
+  # @param name  {String}  test name.
+  # @param test  {Object}  test definition.
   #
   test: (name, test) ->
 
@@ -68,6 +68,4 @@ return types().create 'lightspeed',
   # define group parameters, whereas all other group properties will be
   # used to create tests.
   #
-  reserved: [
-    'after', 'before', 'envs', 'generators', 'run', 'wrappers'
-  ]
+  reserved: ['after', 'before', 'constant']
