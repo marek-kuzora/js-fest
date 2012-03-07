@@ -51,6 +51,9 @@ RUN_METHOD = (name) ->
 # Export the run method into the global namespace.
 F.set_global('run', RUN_METHOD)
 
+# Export the named contex manager.
+F.set_global('context', context)
+
 
 
 #
@@ -64,6 +67,7 @@ class RunnerManager
   # @param _tests  {Array.<String>}  selected tests, optional.
   #
   constructor: (@_tests = []) ->
+
 
   #
   # Runs all continous tests found in the @_selected collection that
@@ -91,6 +95,10 @@ class RunnerManager
 
       # Concat already retrieved tests with these from the node.
       tests = tests.concat(type.get(name).get_tests())
+
+    # Assert there are actually tests to run.
+    if not tests.length
+      throw new Error "Illegal state: no tests found to be executed."
 
     # Run the retrieved test instances by the proper runner.
     type.runner.run(tests)
