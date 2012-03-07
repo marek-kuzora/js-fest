@@ -5,6 +5,17 @@
 
 
 
+#
+# Base reserved group properties. Properties defined below will be used to
+# define group parameters, whereas all other group properties will be
+# used to create tests.
+#
+RESERVED: [
+  'envs', 'generators', 'run'
+]
+
+
+
 return class Type
   
   #
@@ -16,13 +27,13 @@ return class Type
     # Runner responsible for running tests registered to this type.
     @runner = raw.runner
 
-    # Tests validator. Asserts the tests definitions are appropriate
-    # for the given test type. Will throw an error if they arent.
-    @test_validator = raw.test_validator || (->)
+    # Additional initialization code (common, for test, for group).
+    @_node  = raw.node  || (->)
+    @_test  = raw.test  || (->)
+    @_group = raw.group || (->)
 
-    # Groups validator. Asserts the groups definitions are appropriate
-    # for the given test type. Will throw an error if they arent.
-    @group_validator = raw.group_validator || (->)
+    # Reserved group properties.
+    @_reserved = RESERVED.concat(raw.reserved || [])
 
     # Root group of the groups hierarchy tree.
     @_root = new Group('', undefined, @, {})
@@ -33,17 +44,6 @@ return class Type
 
     # Export root selection tree into the global namespace.
     F.set_global(@name, @_root.get_selection_tree())
-    
-
-  #
-  # Registers a scenario group under the given name.
-  #
-  # @param name  {String}  group name.
-  # @param raw   {Object}  group definition.
-  #
-  scenario: (name, raw = {}) ->
-    raw.scenario = true
-    @group(name, raw)
 
 
   #
@@ -110,7 +110,6 @@ return class Type
     if full_name is '' and parent
       throw new Error "Cannot return parent of the root node."
 
-
     # Return root node if full_name is empty.
     return @_root if full_name is '' and not parent
 
@@ -134,3 +133,45 @@ return class Type
       node = node.get(name)
 
     return node
+
+
+  #
+  # Setups the test by executing type-specific additional
+  # initialization code inside the test scope. Provides client with 
+  # a way to insert specific data into a test node, or validate if 
+  # the data passed by the test definition hash is correct.
+  #
+  # @param name   {String}  test name.
+  # @param group  {Object}  test definition.
+  # @param scope  {Test}    test scope.
+  #
+  setup_test: (name, raw, scope) ->
+    @_node.call(scope, name, raw)
+    @_test.call(scope, name, raw)
+
+
+  #
+  # Setups the group by executing type-specific additional
+  # initialization code inside the group scope. Provides client with 
+  # a way to insert specific data into a group node, or validate if 
+  # the data passed by the group definition hash is correct.
+  #
+  # @param name   {String}  group name.
+  # @param group  {Object}  group definition.
+  # @param scope  {Group}   group scope.
+  #
+  setup_group: (name, raw, scope) ->
+    @_node.call(scope, name, raw)
+    @_group.call(scope, name, raw)
+
+
+  #
+  # Returns true if the give name is not reserved and therefore can 
+  # be used to register a test inside a group.
+  #
+  # @param name  {String}
+  #
+  # @return      {Boolean}
+  #
+  is_valid_test_name: (name) ->
+    return @_reserved.indexOf(name) is -1

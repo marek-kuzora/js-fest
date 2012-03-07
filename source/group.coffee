@@ -3,31 +3,26 @@
 #   context: fest/context
 #   regexp:  fierry/util/regexp
 #
-#   Node: fest/node
-#   Test: fest/test
+#   Test:    fest/test
 #
 
 
 
-# Reserved group properties. Properties defined below will be used to
-# define group parameters, whereas all other group properties will be
-# used to create tests.
-RESERVED = [
-  'after', 'after_each' , 'before', 'before_each' ,
-  'envs', 'generators', 'min_arg', 'run', 'scenario'
-]
+return class Group
 
-
-return class Group extends Node
-
-  constructor: (name, parent, type, raw = {}) ->
-    super
-
-    # Indicates a scenario group.
-    @scenario = raw.scenario || false
-
+  #
+  # @param name    {String}  node full name.
+  # @param parent  {Node}    node parent.
+  # @param type    {String}  node type.
+  # @param raw     {Object}  node definition.
+  #
+  constructor: (@name, @parent, @type, raw = {}) ->
+    
     # Collection of group nodes.
     @nodes = []
+
+    # Node simple name.
+    @simple = @name.substr(@parent?.get_child_prefix().length)
 
     # Assert the simple name is selectable.
     if @parent and not @_is_selectable(@simple)
@@ -35,6 +30,9 @@ return class Group extends Node
 
     # Update the selection tree.
     parent.get_selection_tree()[@simple] = @get_selection_tree() if parent
+
+    # Execute type-specific group initialization.
+    @type.setup_group(@name, raw, @)
 
     # Create tests from all other not RESERVED properties.
     @_create_tests(raw)
@@ -61,7 +59,7 @@ return class Group extends Node
   _create_tests: (raw) ->
 
     # Register inline tests provided in raw hash.
-    for name, test of raw when RESERVED.indexOf(name) is -1
+    for name, test of raw when @type.is_valid_test_name(name)
       @register_test(name, test)
 
     # Register tests from factories generated using provided arguments.
@@ -84,16 +82,13 @@ return class Group extends Node
   # @return       {Group}
   #
   register_group: (name, raw = {}) ->
-    
-    # Validates group raw hash.
-    @_type.group_validator(name, raw)
 
     # Assert the name is unique.
     for n in @nodes when n.name is name
       throw new Error "Node #{name} already exists"
     
     # Create new node and push it as a group child.
-    @nodes.push(group = new Group(name, @, @_type, raw))
+    @nodes.push(group = new Group(name, @, @type, raw))
     return group
 
 
@@ -116,15 +111,12 @@ return class Group extends Node
     if typeof raw is 'function'
       raw = run: raw
 
-    # Validates test raw hash.
-    @_type.test_validator(name, raw)
-
     # Assert the name is unique.
     for n in @nodes when n.name is name
       throw new Error "Node #{name} already exists"
 
     # Create new node and push it as a group child.
-    @nodes.push(test = new Test(name, @, @_type, raw))
+    @nodes.push(test = new Test(name, @, @type, raw))
     return test
 
 
@@ -181,7 +173,7 @@ return class Group extends Node
   get_selection_tree: ->
 
     # Assign fully qualified node name.    
-    name = if @name then @_type.name + '.' + @name else @_type.name
+    name = if @name then @type.name + '.' + @name else @type.name
 
     # Assign the selection function.
     return @_selection ?= -> context().select(name)
