@@ -10,9 +10,7 @@
 # define group parameters, whereas all other group properties will be
 # used to create tests.
 #
-RESERVED: [
-  'envs', 'generators', 'run'
-]
+RESERVED = [ 'envs', 'generators', 'run' ]
 
 
 
@@ -42,8 +40,11 @@ return class Type
     # consecutive relative groups.
     @_node_group = @_root
 
+    # Export group registration method into the global namespace.
+    F.set_global(@name, @group)
+
     # Export root selection tree into the global namespace.
-    F.set_global(@name, @_root.get_selection_tree())
+    F.set_global(@name[0], @_root.get_selection_tree())
 
 
   #
@@ -52,7 +53,7 @@ return class Type
   # @param name  {String}  group name.
   # @param raw   {Object}  group definition.
   #
-  group: (name, raw) ->
+  group: (name, raw) =>
 
     # From the group name: if it's absolute & its full name.
     absolute  = @_is_group_absolute(name)
