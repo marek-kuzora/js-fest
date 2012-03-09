@@ -37,7 +37,7 @@ return class LightSpeedTestCase
   execute: =>
 
     # Run the test & store it's run time.
-    @times.push(@run(@args))
+    @times.push(@run())
 
     # If the test was executed EXECUTE_RETRY times.
     if --@_counter is 0
@@ -102,7 +102,7 @@ return class LightSpeedTestCase
     return 5
 
 
-  run: (args, measure = false) ->
+  run: (args = @args, measure = false) ->
 
     # Push new test hierarchy scope.
     F.push_scope()
@@ -118,7 +118,7 @@ return class LightSpeedTestCase
 
     # Retrieve running args to compare.
     ttime = @_run_test(args, scope)
-    trest = if not measure then @_run_constant(args, scope) else 0
+    trest = if not measure then @_run_constants(args, scope) else 0
 
     # Run after method.
     @_run_after(scope)
@@ -139,7 +139,7 @@ return class LightSpeedTestCase
     return new Date() - start
 
 
-  _run_constant: (args, scope) ->
+  _run_constants: (args, scope) ->
     start = new Date()
     @test.constant.call(scope, args) if @test.constant
     return new Date() - start
@@ -182,3 +182,7 @@ return class LightSpeedTestCase
 
   is_failure: ->
     return false
+
+
+  get_failure_text: ->
+    return null

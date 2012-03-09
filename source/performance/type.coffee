@@ -17,32 +17,32 @@ return types().create 'performance',
   #
   # Additional node initialization code.
   #
-  # @param name   {String}  node name.
-  # @param group  {Object}  node definition.
+  # @param name  {String}  node name.
+  # @param node  {Object}  node definition.
   #
   node: (name, node) ->
 
     # Before method for the node.
-    @before = test.before || (->)
+    @before = node.before || (->)
 
     # Before method for each invocation of the same node.
-    @before_each = test.before_each || (->)
+    @before_each = node.before_each
 
     # After method for the test.
-    @after = test.after || (->)
+    @after = node.after || (->)
 
     # After method for each invocation of the same node.
-    @after_each = test.after_each || (->)
+    @after_each = node.after_each
 
     # Collection of preloaded modules.
-    @envs = test.envs || []
+    @envs = node.envs || []
 
 
   #
   # Additional test initialization code. 
   #
-  # @param name   {String}  test name.
-  # @param group  {Object}  test definition.
+  # @param name  {String}  test name.
+  # @param test  {Object}  test definition.
   #
   test: (name, test) ->
 
@@ -67,7 +67,4 @@ return types().create 'performance',
   #
   # Additional reserved group properties.
   #
-  reserved: [
-    'after', 'after_each', 'before', 'before_each',
-    'envs', 'generators', 'run'
-  ]
+  reserved: ['after', 'after_each', 'before', 'before_each']
