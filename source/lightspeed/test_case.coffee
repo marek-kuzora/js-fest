@@ -1,5 +1,13 @@
+#
+# @require:
+#   reporter: fest/lightspeed/reporter
+# 
 
 
+
+# Number of times a single test should be executed to get 
+# a stable time result.
+EXECUTE_RETRY = 5
 
 # Minimum number of runs for a single test case: 1 time.
 MIN_RUN_TIMES = 1
@@ -11,17 +19,42 @@ MAX_RUN_TIMES = 10000000
 
 return class LightSpeedTestCase
 
+  constructor: (@_runner, @test) ->
 
-  constructor: (@test) ->
+    # Number of times the test should be run in a loop.
+    @args = @_measure_run_args()
 
-    # Number of times to run the test case in a loop.
-    @_times = @_get_times()
+    # Collection of the test run times.
+    @times = []
 
-    # Miliseconds to wait before running next test case.
-    @timeout = @_get_time_limit(@_times)
+    # Miliseconds to wait before running test invocation.
+    @timeout = @_get_time_limit(@args)
+
+    # Number of times the test should be executed asynchronously.
+    @_counter = EXECUTE_RETRY
 
 
-  _get_times: ->
+  execute: =>
+
+    # Run the test & store it's run time.
+    @times.push(@run(@args))
+
+    # If the test was executed EXECUTE_RETRY times.
+    if --@_counter is 0
+
+      # Report finished test case.
+      reporter().test_finished(@)
+
+      # Schedule asynchronous processing of the next test.
+      setTimeout(@_runner.run_next_test, @timeout)
+
+    else
+
+      # Schedule another asynchronous execution.
+      setTimeout(@execute, @timeout)
+
+
+  _measure_run_args: ->
 
     # Starting at 1 test invocation & none time.
     arg  = MIN_RUN_TIMES
@@ -33,12 +66,12 @@ return class LightSpeedTestCase
     # Iterate fast over number of invocations when the time is none.
     while time is 0 and arg < MAX_RUN_TIMES
       arg *= 10
-      time = @run(arg)
+      time = @run(arg, true) # changed recently!
 
     # Increase number of invocations until the run time is big enough.
     while time < @_get_time_limit(arg) and arg < MAX_RUN_TIMES
       arg *= 2
-      time = @run(arg)
+      time = @run(arg, true) # changed recently!
 
     # Normalize the number of runs to match the appropriate run time.
     return ~~(10 * arg * @_get_time_limit(arg) / @run(arg))
@@ -69,7 +102,7 @@ return class LightSpeedTestCase
     return 5
 
 
-  run: (times = @_times, measure = false) ->
+  run: (args, measure = false) ->
 
     # Push new test hierarchy scope.
     F.push_scope()
@@ -83,9 +116,9 @@ return class LightSpeedTestCase
     # Run before method.
     @_run_before(scope)
 
-    # Retrieve running times to compare.
-    ttime = @_run_test(times, scope)
-    trest = if measure then @_run_constant(times, scope) else 0
+    # Retrieve running args to compare.
+    ttime = @_run_test(args, scope)
+    trest = if not measure then @_run_constant(args, scope) else 0
 
     # Run after method.
     @_run_after(scope)
@@ -100,15 +133,15 @@ return class LightSpeedTestCase
     return if ttime > trest then ttime - trest else 0
 
 
-  _run_test: (times, scope) ->
+  _run_test: (args, scope) ->
     start = new Date()
-    @test.run.call(scope, times)
+    @test.run.call(scope, args)
     return new Date() - start
 
 
-  _run_internal_wrappers: (times, scope) ->
+  _run_constant: (args, scope) ->
     start = new Date()
-    @test.constant.call(scope, times) if @test.constant
+    @test.constant.call(scope, args) if @test.constant
     return new Date() - start
 
 
@@ -131,3 +164,21 @@ return class LightSpeedTestCase
     envs = envs.concat(node.envs) while node = node.parent
     
     return envs
+
+
+  get_ops_per_ms_all: ->
+    return (@args/time for time in @times)
+
+
+  get_ops_per_ms: ->
+    return @args / @get_average_run_time()
+
+
+  get_average_run_time: ->
+    time  = 0
+    time += t for t in @times
+    return time / EXECUTE_RETRY
+
+
+  is_failure: ->
+    return false

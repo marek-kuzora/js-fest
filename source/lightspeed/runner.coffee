@@ -6,15 +6,9 @@
 
 
 
-# Number of times a single test should be executed to get a stable
-# time result.
-EXECUTE_RETRY = 5
-
-
-
 return class LightSpeedRunner
 
-  constructor: (@_test_case_cls)->
+  constructor: (@_test_case)->
 
   run: (@_tests) ->
 
@@ -22,10 +16,10 @@ return class LightSpeedRunner
     reporter().tests_found(@_tests)
 
     # Process first test from the queue.
-    @_process_test()
+    @run_next_test()
 
 
-  _process_test: =>
+  run_next_test: =>
 
     # If there are no tests to process.
     if not @_tests.length
@@ -35,31 +29,14 @@ return class LightSpeedRunner
 
       # Return handling to the RunnerManager.
       return manager().run_next()
-    
-    else
 
-      # Reset the counter to EXECUTE_RETRY times.
-      @_counter = EXECUTE_RETRY
+    else
 
       # Create test case wrapping actual test. This will perform some
       # time consuming operations. Therefore running the test case
       # should be scheduled as asynchronous invocation to keep the
       # application responsive.
-      @_test_case = new @_test_case_cls(@_tests.shift())
+      test = new @_test_case(@, @_tests.shift())
 
-      # Schedule asynchronous processing of the test case.
-      setTimeout(@_process_test_case, @_test_case.timeout)
-
-
-  _process_test_case: =>
-
-    # Run the test case.
-    time = @_test_case.run()
-
-    # Report finished test case.
-    reporter().test_case_finished(@_test_case, time)
-
-    # Schedule asynchronous processing of the next test or test case.
-    # TODO more - about counter!
-    return setTimeout(@_process_test, @_test_case.timeout) if --@_counter is 0
-    return setTimeout(@_process_test_case, @_test_case.timeout)
+      # Schedule asynchronous execution of the test case.
+      setTimeout(test.execute, test.timeout)
