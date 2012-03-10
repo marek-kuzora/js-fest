@@ -71,7 +71,8 @@ class LightSpeedReporter
   # @return      {String}
   #
   _get_name: (test) ->
-    return string().rpad(test.test.name, @_get_padding())
+    name = test.test.name.substr(@_group.length + 1)
+    return string().rpad(name, @_get_padding())
 
 
   #
