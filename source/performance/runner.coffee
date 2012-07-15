@@ -1,7 +1,7 @@
 #
 # @require:
 #   manager:  fest/app
-#   reporter: fest/lightspeed/reporter
+#   reporter: fest/performance/reporter
 #
 
 

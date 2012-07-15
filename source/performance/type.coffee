@@ -2,8 +2,8 @@
 # @require:
 #   types:    fest/types
 #
-#   Runner:   fest/lightspeed/runner
-#   TestCase: fest/lightspeed/test_case
+#   Runner:   fest/performance/runner
+#   TestCase: fest/performance/test_case
 #
 
 
