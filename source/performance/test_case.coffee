@@ -43,9 +43,9 @@ return class PerformanceTestCase extends TestCase
     start = new Date()
 
     while args--
-      b.call(scope) for b in @_before_each
+      #b.call(scope) for b in @_before_each
       @test.run.call(scope)
-      a.call(scope) for a in @_after_each
+      #a.call(scope) for a in @_after_each
 
     # Return full test run time
     return new Date() - start
@@ -57,9 +57,9 @@ return class PerformanceTestCase extends TestCase
     start = new Date()
 
     # Full test run loop.
-    while args--
-      b.call(scope) for b in @_before_each
-      a.call(scope) for a in @_after_each
+    #while args--
+    #  b.call(scope) for b in @_before_each
+    #  a.call(scope) for a in @_after_each
 
     # Return full test run time
     return new Date() - start
@@ -73,6 +73,6 @@ return class PerformanceTestCase extends TestCase
   get_failure_text: ->
     return if @is_failure()
     then "Test is too fast for standard performance testing." +
-         "The results may be inaccurate. Try rewriting the test" +
+         "The results may be inaccurate. Try rewriting the test " +
          "as a lightspeed test."
     else ""

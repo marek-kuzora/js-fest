@@ -13,6 +13,7 @@ return types().create 'lightspeed',
   # Runner running the lightspeed tests.   
   runner: new Runner(TestCase)
 
+
   #
   # Additional node initialization code.
   #

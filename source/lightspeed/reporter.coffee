@@ -82,7 +82,7 @@ class LightSpeedReporter
   # @return      {String}
   #
   _get_ops: (test) ->
-    rgx = /(\d+)(\d{3})(\.\d{2})/
+    rgx = /(\d+)(\d{3})(\.\d{4})/
     ops = test.get_ops_per_ms().toFixed(2)
     ops = ops.replace(rgx, '$1' + ' ' + '$2$3')
 
