@@ -1,9 +1,9 @@
 #
 # @require:
-#   types:      fest/types
-#   context:    fest/context
-#   string:     fierry/util/string
-#   storage:    fierry/util/storage
+#   types:   fest/types
+#   context: fest/context
+#   string:  fierry/util/string
+#   storage: fierry/storage/web_storage
 #
 
 #
@@ -38,11 +38,11 @@ RUN_METHOD = (name) ->
   tests = context().get(name)
 
   # Save selected tests into session storage
-  storage().set(SELECTED_TESTS_KEY, tests, true) if tests.length
+  storage().set(SELECTED_TESTS_KEY, tests) if tests.length
 
   # Set the running indicator to true in order to trigger controller
   # to run selected tests after the page reloads.
-  storage().set(ACTIVE_TESTS_KEY, true, true)
+  storage().set(ACTIVE_TESTS_KEY, true)
 
   # Reload the page.
   window.location.reload()
@@ -107,13 +107,13 @@ class RunnerManager
 
 # Create a RunnerManager singleton, passing a collection of selected
 # tests retrieved from the session storage.
-SINGLETON = new RunnerManager(storage().get(SELECTED_TESTS_KEY, true))
+SINGLETON = new RunnerManager(storage().get(SELECTED_TESTS_KEY))
 
 # Check if Fest Framework is set to run the tests.
-if storage().get(ACTIVE_TESTS_KEY, true)
+if storage().get(ACTIVE_TESTS_KEY)
 
   # Set the running indicator to false for future reloads.
-  storage().set(ACTIVE_TESTS_KEY, false, true)
+  storage().set(ACTIVE_TESTS_KEY, false)
 
   # Run all continuous tests that belong to the same test type. 
   SINGLETON.run_next()

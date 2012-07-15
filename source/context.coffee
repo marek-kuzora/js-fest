@@ -1,7 +1,7 @@
 #
 # @require:
-#   array:   fierry/util/array
-#   storage: fierry/util/storage
+#   array:   fierry/util/array.
+#   storage: fierry/storage/web_storage
 #
 
 
@@ -60,7 +60,7 @@ class Context
     fn = (i) -> return DUPLICATED_TEST(qualifier, i)
 
     # Erase all nodes that are duplicated by qualifier.
-    array().erase_all_cst(@_selected, fn)
+    array.filter_out(@_selected, fn)
 
   
   #

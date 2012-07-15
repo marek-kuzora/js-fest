@@ -1,7 +1,6 @@
 #
 # @require:
 #   context: fest/context
-#   regexp:  fierry/util/regexp
 #
 #   Test:    fest/test
 #
@@ -25,8 +24,8 @@ return class Group
     @simple = @name.substr(@parent?.get_child_prefix().length)
 
     # Assert the simple name is selectable.
-    if @parent and not @_is_selectable(@simple)
-      throw new Error "Simple name '#{@simple}' is not selectable."
+    #if @parent and not @_is_selectable(@simple)
+    #  console.warn "Simple name '#{@simple}' is not selectable."
 
     # Update the selection tree.
     parent.get_selection_tree()[@simple] = @get_selection_tree() if parent
@@ -46,7 +45,7 @@ return class Group
   # @return      {Boolean}
   #
   _is_selectable: (name) ->
-    return regexp().VARIABLE.test(name)
+    return /^[a-zA-Z_][0-9a-zA-Z_]*$/.test(name)
 
 
   #
